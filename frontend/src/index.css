@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   Copa Tracker — sistema de design "Floodlight"
+   Mood: estádio à noite, programa de matchday editorial.
+   Tinta profunda esverdeada + acento âmbar de holofote.
+   Esmeralda = sinal funcional (assistido). Vermelho = ao vivo.
+   =========================================================================== */
+
+@theme {
+  /* Paleta */
+  --color-ink: #0a0c0a;
+  --color-ink-2: #0f120e;
+  --color-surface: #14180f;
+  --color-surface-2: #1a1f13;
+  --color-line: rgba(244, 241, 233, 0.08);
+  --color-line-strong: rgba(244, 241, 233, 0.16);
+
+  --color-bone: #f4f1e9;
+  --color-muted: #8b9082;
+  --color-faint: #5b6055;
+
+  --color-amber: #ffb000;
+  --color-amber-bright: #ffc949;
+  --color-emerald: #2bd576;
+  --color-live: #ff4d4d;
+
+  /* Tipografia */
+  --font-display: "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "General Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Sombra de holofote (glow) */
+  --shadow-glow: 0 0 0 1px rgba(255, 176, 0, 0.25),
+    0 12px 40px -12px rgba(255, 176, 0, 0.35);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    /* Atmosfera: dois holofotes difusos vindos do alto + base esverdeada */
+    background-image:
+      radial-gradient(
+        80vw 60vh at 75% -10%,
+        rgba(255, 176, 0, 0.1),
+        transparent 60%
+      ),
+      radial-gradient(
+        70vw 50vh at 10% -5%,
+        rgba(43, 213, 118, 0.06),
+        transparent 55%
+      );
+    background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  /* Textura de grão sutil sobre tudo */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--color-amber);
+    color: var(--color-ink);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ink);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-2);
+    border-radius: 999px;
+    border: 2px solid var(--color-ink);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a3320;
+  }
+}
+
+@layer utilities {
+  /* Números de placar/horário em largura tabular (estilo placar eletrônico) */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Linhas de campo decorativas (faixa lateral) */
+  .pitch-lines {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 38px,
+      var(--color-line) 38px,
+      var(--color-line) 39px
+    );
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Animações */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.5);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 5px rgba(255, 77, 77, 0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-live {
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-live {
+    animation: none;
+  }
+}
