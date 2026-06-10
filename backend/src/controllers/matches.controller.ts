@@ -1,9 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../services/prisma";
-import {
-  ensureFixturesCached,
-  ensureMatchDetailCached,
-} from "../services/cache";
+import { ensureFixturesCached } from "../services/cache";
 
 // GET /matches — lista todos os jogos, ordenados por data.
 export async function listMatches(_req: Request, res: Response) {
@@ -24,18 +21,7 @@ export async function listMatches(_req: Request, res: Response) {
 export async function getMatch(req: Request, res: Response) {
   const { id } = req.params;
 
-  const exists = await prisma.match.findUnique({ where: { id } });
-  if (!exists) {
-    res.status(404).json({ error: "Jogo não encontrado" });
-    return;
-  }
-
-  try {
-    await ensureMatchDetailCached(id);
-  } catch (err) {
-    console.error(`[matches] falha ao cachear detalhe do jogo ${id}:`, err);
-  }
-
+  // Detalhe (gols/assistências) é preenchido à mão e mora no banco.
   const match = await prisma.match.findUnique({
     where: { id },
     include: {
@@ -43,5 +29,11 @@ export async function getMatch(req: Request, res: Response) {
       lineups: true,
     },
   });
+
+  if (!match) {
+    res.status(404).json({ error: "Jogo não encontrado" });
+    return;
+  }
+
   res.json(match);
 }

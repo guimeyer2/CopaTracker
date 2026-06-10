@@ -24,6 +24,14 @@ export const config = {
       process.env.GOOGLE_CALLBACK_URL ??
       "http://localhost:3001/auth/google/callback",
   },
+  // Fonte gratuita dos fixtures da Copa 2026 (calendário).
+  thesportsdb: {
+    key: process.env.THESPORTSDB_KEY ?? "3", // "3" = chave pública de teste
+    leagueId: process.env.THESPORTSDB_LEAGUE ?? "4429", // FIFA World Cup
+    season: process.env.THESPORTSDB_SEASON ?? "2026",
+    baseUrl: "https://www.thesportsdb.com/api/v1/json",
+  },
+  // Caminho pago/legado — usado só se um dia houver plano que libere a season.
   apiFootball: {
     key: process.env.API_FOOTBALL_KEY ?? "",
     league: process.env.API_FOOTBALL_LEAGUE ?? "1",

@@ -1,20 +1,45 @@
 import { prisma } from "./prisma";
-import {
-  fetchFixtures,
-  fetchEvents,
-  fetchLineups,
-} from "./apifootball";
+import { fetchWorldCupFixtures } from "./thesportsdb";
+import type { MappedMatch } from "./apifootball";
+import { fetchEvents, fetchLineups } from "./apifootball";
 
 // Lógica de cache: o banco é a fonte de verdade pro frontend.
-// A API-Football só é chamada quando os dados estão ausentes ou velhos.
+// Os fixtures vêm da TheSportsDB (calendário); placar/gols são manuais.
 
 const ONE_HOUR = 60 * 60 * 1000;
 const ONE_DAY = 24 * ONE_HOUR;
 
 /**
+ * Upsert de fixtures preservando o que é editado à mão.
+ * Em jogos já existentes só atualizamos metadados do confronto
+ * (data, times, escudos, estádio, fase, grupo) — placar e status são
+ * mantidos como o usuário deixou.
+ */
+export async function upsertFixtures(fixtures: MappedMatch[]): Promise<void> {
+  const now = new Date();
+  for (const f of fixtures) {
+    await prisma.match.upsert({
+      where: { id: f.id },
+      create: { ...f, cachedAt: now },
+      update: {
+        date: f.date,
+        homeTeam: f.homeTeam,
+        awayTeam: f.awayTeam,
+        homeFlag: f.homeFlag,
+        awayFlag: f.awayFlag,
+        venue: f.venue,
+        stage: f.stage,
+        group: f.group,
+        cachedAt: now,
+      },
+    });
+  }
+}
+
+/**
  * Garante que a lista de jogos esteja no banco.
- * Re-busca da API se o banco estiver vazio ou se o fixture mais recente
- * foi atualizado há mais de 1 dia. Faz upsert pra atualizar placares.
+ * Re-busca da TheSportsDB se o banco estiver vazio ou se o fixture mais
+ * recente foi atualizado há mais de 1 dia (pega novos jogos do mata-mata).
  */
 export async function ensureFixturesCached(): Promise<void> {
   const count = await prisma.match.count();
@@ -30,25 +55,8 @@ export async function ensureFixturesCached(): Promise<void> {
 
   if (!isStale) return;
 
-  const fixtures = await fetchFixtures();
-  const now = new Date();
-
-  for (const f of fixtures) {
-    await prisma.match.upsert({
-      where: { id: f.id },
-      create: { ...f, cachedAt: now },
-      update: {
-        date: f.date,
-        homeScore: f.homeScore,
-        awayScore: f.awayScore,
-        status: f.status,
-        venue: f.venue,
-        stage: f.stage,
-        group: f.group,
-        cachedAt: now,
-      },
-    });
-  }
+  const fixtures = await fetchWorldCupFixtures();
+  await upsertFixtures(fixtures);
 }
 
 /**
