@@ -11,3 +11,6 @@ coverage/
 # Local project docs (not versioned)
 CLAUDE.md
 FRONTEND_SKILL.md
+
+# TS build cache
+*.tsbuildinfo
