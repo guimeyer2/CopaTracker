@@ -1,0 +1,89 @@
+// Schema do Copa Tracker — Postgres via Prisma.
+// Doc completa dos modelos vive no CLAUDE.md (raiz do repo).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  watches   Watch[]
+}
+
+model Match {
+  id        String        @id // fixture_id da API-Football (string)
+  date      DateTime
+  homeTeam  String
+  awayTeam  String
+  homeFlag  String?
+  awayFlag  String?
+  homeScore Int?
+  awayScore Int?
+  status    String        @default("NS") // NS, 1H, HT, 2H, FT, etc. (API-Football short status)
+  stage     String // "Group Stage", "Round of 16", etc.
+  group     String?
+  venue     String?
+  cachedAt  DateTime?
+  events    MatchEvent[]
+  lineups   MatchLineup[]
+  watches   Watch[]
+
+  @@index([date])
+}
+
+model MatchEvent {
+  id         String  @id @default(cuid())
+  matchId    String
+  match      Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type       String // "Goal", "Card", "Subst"
+  detail     String? // "Normal Goal", "Penalty", "Yellow Card", etc.
+  minute     Int
+  playerId   Int?
+  playerName String?
+  teamName   String
+
+  @@index([matchId])
+}
+
+model MatchLineup {
+  id         String  @id @default(cuid())
+  matchId    String
+  match      Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerId   Int
+  playerName String
+  teamName   String
+  position   String?
+  isStarter  Boolean
+
+  @@index([matchId])
+}
+
+model Watch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  rating    Float? // 0 a 5, incrementos de 0.5
+  watchedAt DateTime @default(now())
+
+  @@unique([userId, matchId])
+}
+
+// Tabela de sessões gerenciada pelo connect-pg-simple.
+model session {
+  sid    String   @id
+  sess   Json
+  expire DateTime @db.Timestamptz(6)
+
+  @@index([expire])
+}
